@@ -23,6 +23,7 @@ namespace EShop.Api
                     };
                 });
 
+            services.AddScoped<SuccessfulApiRequestTrackingFilter>();
 
 
             services.AddEndpointsApiExplorer();
@@ -37,13 +38,12 @@ namespace EShop.Api
 
             services.AddScoped<SuccessfulApiMeter>();
             services.AddScoped<CustomExceptionMeter>();
-            services.AddScoped<SuccessfulApiRequestTrackingFilter>();
 
             services.AddOpenTelemetry()
               .WithMetrics(builder =>
               {
                   builder.AddAspNetCoreInstrumentation();
-                  builder.AddMeter("Microsoft.AspNetCore.Hosting", "Microsoft.AspNetCore.Server.Kestrel", CustomExceptionMeter.ServiceName);
+                  builder.AddMeter("Microsoft.AspNetCore.Hosting", "Microsoft.AspNetCore.Server.Kestrel", CustomExceptionMeter.ServiceName,SuccessfulApiMeter.ServiceName);
                   builder.AddView("http.server.request.duration", new ExplicitBucketHistogramConfiguration
                   {
                       Boundaries = new double[] {  1, 2.5, 5, 7.5, 10 }

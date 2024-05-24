@@ -8,9 +8,13 @@ namespace EShop.Api.ExceptionHandler
     public sealed class GlobalExceptionHandler : IExceptionHandler
     {
         private readonly CustomExceptionMeter _exceptionMeter;
-        public GlobalExceptionHandler()
+        private readonly ILogger<GlobalExceptionHandler> _logger;
+
+        public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
         {
             _exceptionMeter = new CustomExceptionMeter();
+            _logger = logger;
+
         }
         public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {
@@ -39,6 +43,7 @@ namespace EShop.Api.ExceptionHandler
             _exceptionMeter.TrackApiException(context.Request.Path,ex);
             context.Response.ContentType = "Application/json";
             context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            _logger.LogError(ex, "BadRequest response built for path: {RequestPath}", context.Request.Path);
             return context.Response.WriteAsync(new Response { Succeeded = false, Message = "خطا در داده های ورودی", Errors = ex.Message.Split('-').ToList() }.ToString());
         }
 
@@ -47,6 +52,7 @@ namespace EShop.Api.ExceptionHandler
             _exceptionMeter.TrackApiException(context.Request.Path, ex);
             context.Response.ContentType = "Application/json";
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            _logger.LogError(ex, "Internal server error response built for path: {RequestPath}", context.Request.Path);
             return context.Response.WriteAsync(new Response { Succeeded = false, Message = " خطایی در سمت سرور رخ داده است", Errors = new List<string> { ex.Message } }.ToString());
         }
     }
